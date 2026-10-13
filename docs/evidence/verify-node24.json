@@ -1,0 +1,62 @@
+{
+  "ok": true,
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "blocked": 0
+  },
+  "steps": [
+    {
+      "id": "router",
+      "status": "pass",
+      "detail": "1589/2048 bytes (working tree)",
+      "diagnostics": []
+    },
+    {
+      "id": "test-policy",
+      "status": "pass",
+      "diagnostics": []
+    },
+    {
+      "id": "secret-scan",
+      "status": "pass",
+      "detail": "gitleaks 8.30.1: no leaks in working tree",
+      "diagnostics": []
+    },
+    {
+      "id": "lint",
+      "status": "pass",
+      "command": "npm run lint",
+      "exitCode": 0,
+      "diagnostics": []
+    },
+    {
+      "id": "typecheck",
+      "status": "pass",
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "diagnostics": []
+    },
+    {
+      "id": "test:unit",
+      "status": "pass",
+      "command": "npm run test:unit",
+      "exitCode": 0,
+      "diagnostics": []
+    },
+    {
+      "id": "build",
+      "status": "pass",
+      "command": "npm run build",
+      "exitCode": 0,
+      "diagnostics": []
+    },
+    {
+      "id": "test:e2e",
+      "status": "pass",
+      "command": "npm run test:e2e",
+      "exitCode": 0,
+      "diagnostics": []
+    }
+  ]
+}
