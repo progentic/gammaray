@@ -1,0 +1,3 @@
+#!/bin/sh
+# Local feedback only: checks the staged router, then the working tree. CI verifies committed content.
+node scripts/check-router.mjs --staged && npm run verify

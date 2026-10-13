@@ -1,0 +1,17 @@
+# GammaRay secret-scanning configuration for gitleaks.
+# The default rule set is used unchanged. The allowlist covers only generated
+# directories (both are gitignored): checked-in source, docs, and fixtures are
+# always scanned. Do not add path or rule exclusions here to make a finding
+# pass; a genuine false positive is allowlisted by its exact fingerprint in
+# .gitleaksignore with a recorded reason, per docs/CI_PLAN.md.
+title = "GammaRay"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Generated directories only: dependency installs and build output."
+paths = [
+  '''(^|/)node_modules/''',
+  '''(^|/)dist/''',
+]
