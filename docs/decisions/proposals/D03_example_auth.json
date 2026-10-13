@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "event_id": "f59631136838ff81e36724411528f494294b680f99c89a9b77645f51f7877153",
+  "raw_ref": "raw-a-0001",
+  "parser": {
+    "id": "windows-security",
+    "version": "0.1.0"
+  },
+  "source": {
+    "connector_id": "win-sec-01",
+    "connector_kind": "windows_event",
+    "producer_vendor": "Microsoft",
+    "producer_product": "Windows Security",
+    "producer_event_code": "4625"
+  },
+  "time": {
+    "ingest_utc": "2026-10-01T14:03:12Z",
+    "event_utc": "2026-10-01T14:03:11Z",
+    "zone_status": "source_provided",
+    "offset_minutes": 0
+  },
+  "event": {
+    "family": "authentication",
+    "type": "authentication.login",
+    "outcome": "failure",
+    "action": "login"
+  },
+  "host": {
+    "name": "dc-example-01"
+  },
+  "actor": {
+    "user_name": "synthetic-user"
+  },
+  "network": {
+    "source_ip": "192.0.2.44"
+  },
+  "details": {
+    "logon_type": 3
+  },
+  "extensions": {
+    "windows": {
+      "event_id": 4625,
+      "logon_type": 3
+    }
+  }
+}

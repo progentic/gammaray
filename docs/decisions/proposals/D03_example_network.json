@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "event_id": "d4f0f6492ec7965634bc15e7fbbbe984d67db30d37b74e0a6f24b80e2f76d13c",
+  "raw_ref": "raw-b-0002",
+  "parser": {
+    "id": "cisco-asa-v1",
+    "version": "0.1.0"
+  },
+  "source": {
+    "connector_id": "splunk-soc-1",
+    "connector_kind": "splunk",
+    "producer_vendor": "Cisco",
+    "producer_product": "ASA",
+    "producer_event_code": "302013"
+  },
+  "time": {
+    "ingest_utc": "2026-10-01T19:03:13Z",
+    "event_utc": "2026-10-01T19:03:11Z",
+    "zone_status": "assumed",
+    "offset_minutes": -300,
+    "assumption_id": "cisco-fall-2026-zone"
+  },
+  "event": {
+    "family": "network",
+    "type": "network.connection",
+    "outcome": "unknown",
+    "action": "allow"
+  },
+  "network": {
+    "source_ip": "198.51.100.7",
+    "source_port": 51514,
+    "destination_ip": "203.0.113.9",
+    "destination_port": 443,
+    "protocol": "tcp"
+  },
+  "details": {
+    "bytes_out": 1024
+  },
+  "extensions": {
+    "splunk": {
+      "sourcetype": "cisco:asa",
+      "index": "network"
+    }
+  }
+}
