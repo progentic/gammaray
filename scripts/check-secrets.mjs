@@ -2,18 +2,15 @@
 // reports, or error messages; secret scanning is part of verification).
 // Usage:
 //   node scripts/check-secrets.mjs              scan the working tree
-//   node scripts/check-secrets.mjs --self-test  controls: the scanner must
-//                                               catch a synthetic dummy
-//                                               credential, pass a clean file,
-//                                               and abnormal scanner reports
-//                                               (findings exit with a missing,
-//                                               malformed, or empty report)
-//                                               must fail closed, never clean
+//   node scripts/check-secrets.mjs --self-test  controls: synthetic credential,
+//                                               clean file, abnormal reports
+//                                               and actual unreadable report
+//                                               fail closed on all exit codes
 // The scanner is gitleaks, pinned to PINNED_VERSION. The pin is enforced, not
 // advisory: a different version fails the check, because rule behavior is part
 // of the gate's meaning. CI installs the pinned build (docs/CI_PLAN.md).
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { diagnostic, exitWithResult, formatDiagnostic, isMain } from "./lib/report.mjs";
@@ -69,24 +66,35 @@ function versionDiagnostic() {
   return null;
 }
 
-// Interprets one scanner run from its exit status and report text
-// (reportText is null when no report file was produced). This is the
-// fail-open boundary fixed after the Phase 0 architecture review: gitleaks
-// records "no leaks" by producing no report (or an empty one), so a missing
-// or malformed report is only ever acceptable alongside a clean exit (0).
-// A findings exit (1) whose report is missing, malformed, not a JSON array,
-// or an empty array is an abnormal result — as is a clean exit whose report
-// lists findings — and must fail closed, never be read as "clean".
-export function interpretScan(status, reportText) {
+// Gitleaks normally returns exit 0 with no report, or an empty report.
+// ENOENT means absent. Every other read failure fails closed. Reading
+// directly avoids masking permission errors as "missing" via existsSync.
+export function readScanReport(reportPath) {
+  try {
+    return { reportText: readFileSync(reportPath, "utf8"), reportReadError: null };
+  } catch (error) {
+    if (error?.code === "ENOENT") return { reportText: null, reportReadError: null };
+    const code = error?.code ?? "UNKNOWN";
+    return { reportText: null, reportReadError: `gitleaks report cannot be read (${code}).` };
+  }
+}
+
+// A clean exit with no report or an empty report is valid. Any non-empty
+// report must be a JSON array, regardless of the scanner's exit status.
+// A findings exit requires a nonempty array. An unreadable report always
+// fails closed, even when gitleaks itself exits 0.
+export function interpretScan(status, reportText, reportReadError = null) {
+  if (reportReadError) return { findings: [], reportError: reportReadError };
   let parsed = null;
-  let malformed = false;
-  if (reportText !== null && reportText.trim() !== "") {
+  if (reportText !== null && reportText !== "") {
     try {
       parsed = JSON.parse(reportText);
     } catch {
-      malformed = true;
+      return { findings: [], reportError: "gitleaks report is malformed JSON; scan result cannot be trusted." };
     }
-    if (!malformed && !Array.isArray(parsed)) malformed = true;
+    if (!Array.isArray(parsed)) {
+      return { findings: [], reportError: "gitleaks report is not a JSON array; scan result cannot be trusted." };
+    }
   }
   if (status === 0) {
     if (Array.isArray(parsed) && parsed.length > 0) {
@@ -98,10 +106,10 @@ export function interpretScan(status, reportText) {
     return { findings: [], reportError: null };
   }
   if (status === 1) {
-    if (malformed || !Array.isArray(parsed) || parsed.length === 0) {
+    if (!Array.isArray(parsed) || parsed.length === 0) {
       return {
         findings: [],
-        reportError: "gitleaks exited 1 (findings) but its findings report is missing, malformed, or empty; the findings cannot be enumerated, so the scan fails closed instead of reporting clean.",
+        reportError: "gitleaks exited 1 (findings) but its findings report is missing or empty; the findings cannot be enumerated, so the scan fails closed.",
       };
     }
     return { findings: parsed, reportError: null };
@@ -109,9 +117,8 @@ export function interpretScan(status, reportText) {
   return { findings: [], reportError: null };
 }
 
-// Scans one directory. Returns the gitleaks exit status, parsed findings,
-// and a reportError when the scanner's report is abnormal for its exit
-// status (see interpretScan). Callers must treat reportError as failure.
+// Scans one directory. Reports abnormal or unreadable output as an error
+// rather than treating scanner exit 0 as proof of a valid report.
 function scanDir(dir, configPath) {
   const reportDir = mkdtempSync(join(tmpdir(), "gammaray-gitleaks-report-"));
   const reportPath = join(reportDir, "report.json");
@@ -121,13 +128,8 @@ function scanDir(dir, configPath) {
        "--report-format", "json", "--report-path", reportPath, dir],
       process.cwd(),
     );
-    let reportText = null;
-    try {
-      if (existsSync(reportPath)) reportText = readFileSync(reportPath, "utf8");
-    } catch {
-      reportText = null;
-    }
-    const { findings, reportError } = interpretScan(r.status, reportText);
+    const { reportText, reportReadError } = readScanReport(reportPath);
+    const { findings, reportError } = interpretScan(r.status, reportText, reportReadError);
     return { status: r.status, findings, reportError, stderr: r.stderr };
   } finally {
     rmSync(reportDir, { recursive: true, force: true });
@@ -223,14 +225,20 @@ export function selfTest() {
         fix: "Inspect .gitleaks.toml and the reported rule; correct the configuration rather than the fixture.",
       }));
     }
-    // Abnormal-report negative controls (fail-open regression): each of
-    // these findings-exit reports must be rejected as abnormal.
+    // Abnormal-report negative controls, including the two clean-exit
+    // contradictions identified in the second Phase 0 review.
     const abnormalCases = [
       ["findings exit, report missing", interpretScan(1, null)],
       ["findings exit, report malformed", interpretScan(1, "this is not json")],
+      ["findings exit, whitespace-only report", interpretScan(1, "   ")],
       ["findings exit, report not an array", interpretScan(1, '{"findings": []}')],
       ["findings exit, report empty", interpretScan(1, "[]")],
+      ["clean exit, report malformed", interpretScan(0, "this is not json")],
+      ["clean exit, whitespace-only report", interpretScan(0, "   ")],
+      ["clean exit, report not an array", interpretScan(0, '{"findings": []}')],
       ["clean exit, report lists findings", interpretScan(0, '[{"RuleID": "x"}]')],
+      ["clean exit, report unreadable", interpretScan(0, null, "EACCES")],
+      ["findings exit, report unreadable", interpretScan(1, null, "EACCES")],
     ];
     for (const [label, result] of abnormalCases) {
       if (!result.reportError) {
@@ -238,7 +246,7 @@ export function selfTest() {
           check: CHECK,
           code: "ABNORMAL_REPORT_CONTROL_FAILED",
           problem: `Abnormal scanner result was accepted as clean: ${label}. The abnormal-report fail-open is present.`,
-          fix: "Restore fail-closed handling in interpretScan (scripts/check-secrets.mjs): a findings exit requires a well-formed, non-empty JSON report.",
+          fix: "Restore fail-closed handling in interpretScan: a findings exit requires a nonempty JSON array; a clean exit must reject malformed, non-array, nonempty or unreadable reports.",
         }));
       }
     }
@@ -251,15 +259,38 @@ export function selfTest() {
         fix: "Fix interpretScan (scripts/check-secrets.mjs) so a findings exit with a non-empty JSON array report yields its findings.",
       }));
     }
-    if (interpretScan(0, null).reportError) {
+    // Exercise actual report I/O failures independently from pure parsing.
+    // A directory occupies the intended report path and is unreadable as a
+    // file even when the self-test runs as root, unlike a chmod-only test.
+    const unreadablePath = join(root, "report-is-directory");
+    mkdirSync(unreadablePath);
+    const unreadable = readScanReport(unreadablePath);
+    if (!unreadable.reportReadError || !interpretScan(0, unreadable.reportText, unreadable.reportReadError).reportError) {
       diagnostics.push(diagnostic({
         check: CHECK,
         code: "ABNORMAL_REPORT_CONTROL_FAILED",
-        problem: "A clean exit with no report — gitleaks' normal no-leaks shape — was rejected as abnormal.",
+        problem: "An existing but unreadable scanner report was treated as absent or clean.",
+        fix: "Keep readScanReport I/O failures distinct from a legitimately absent report.",
+      }));
+    }
+    const trulyAbsent = readScanReport(join(root, "not-created.json"));
+    if (trulyAbsent.reportText !== null || trulyAbsent.reportReadError || interpretScan(0, trulyAbsent.reportText).reportError) {
+      diagnostics.push(diagnostic({
+        check: CHECK,
+        code: "ABNORMAL_REPORT_CONTROL_FAILED",
+        problem: "The scanner's valid clean exit with no report was rejected.",
+        fix: "Allow absent reports only when the scanner exits cleanly and no read error occurred.",
+      }));
+    }
+    if (interpretScan(0, null).reportError || interpretScan(0, "[]").reportError) {
+      diagnostics.push(diagnostic({
+        check: CHECK,
+        code: "ABNORMAL_REPORT_CONTROL_FAILED",
+        problem: "A clean exit with no report or an empty array was rejected as abnormal.",
         fix: "Fix interpretScan (scripts/check-secrets.mjs): a missing or empty report is acceptable only with a clean exit (0).",
       }));
     }
-    return { diagnostics, detail: "controls: dummy credential flagged; clean file passed; abnormal reports fail closed" };
+    return { diagnostics, detail: "controls: synthetic credential and clean file; malformed/unreadable reports fail closed" };
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
