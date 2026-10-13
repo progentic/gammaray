@@ -9,7 +9,7 @@ These constraints define GammaRay's contract. Automated checks enforce only the 
 | Raw records are append-only. No update or delete path exists except retention execution | `src/raw/` exposes append and read only; retention job is the sole deleter and writes an audit event per run |
 | Every raw record carries a system-assigned UTC ingest timestamp, source id, source type, batch id, and content hash | Raw envelope constructor in `src/ingest/` rejects incomplete envelopes |
 | The ingest timestamp comes from GammaRay, never from the source. The source-claimed timestamp is stored separately | `src/ingest/` sets ingest time; envelope type has distinct fields |
-| Re-ingesting the same source data does not create duplicate raw records | Idempotent dedupe on source id, content hash, and source position in `src/ingest/`; test re-ingests a fixture batch |
+| Re-ingesting the same source data does not create duplicate raw records | Idempotency uses a source-scoped occurrence key with defined retry boundaries, not content hash alone. Preserve separate identical-byte occurrences; test retry races and nullable source positions under D01/PostgreSQL |
 | Every normalized event references exactly one raw record via `raw_ref`. No normalized event exists without raw | Normalized store write rejects events with missing or unresolved `raw_ref` |
 | Normalization is deterministic. Same raw record and same parser version yield the same normalized event | Parsers are pure; golden-fixture tests per parser; parser id and version stored on every event |
 | The normalized store is rebuildable from raw | Reprocessing command in `src/normalize/`; test rebuilds a fixture set and compares |
@@ -74,13 +74,13 @@ These obligations require review; passing scripts does not prove they were follo
 
 ## Accepted open items
 
-1. Storage engines for raw, normalized, and derived tiers are not selected.
+1. **D01 selected:** independently administered B3 WORM raw vault plus PostgreSQL relational store; exact vault product, Postgres hosting, roles and restore implementation remain unverified.
 2. Raw retention period, retention trigger, and any legal-hold behavior are not defined.
-3. The canonical schema's field set and any alignment with an external schema standard are not defined.
+3. **D03 approach accepted, field model pending:** native JSON Schema 2020-12, two additional families and a 26-field draft observable registry; owner field-model approval and implementation remain outstanding.
 4. CSV ingestion needs a defined column-mapping mechanism and a rule for CSVs without a reliable timestamp column.
-5. Deployment model (single instance or multi-tenant) and the resulting isolation requirements are not defined.
-6. CTI and CVE feed selection, refresh cadence, and staleness threshold are not defined.
-7. **D07 accepted, 2026-10-12:** three sensitivity classes; unbounded free text in restricted raw only; server-enforced distinct raw-read permission; masked-by-default exports; EXSUM aggregates only. Implementation and environment classification overlay remain outstanding under P1/D05.
+5. **D05 A2 selected:** single application deployment and separately administered raw vault as target. P1 worksheet DP-01/02/07/09/12 needs owner facts; P7 must verify B3/B4 controls.
+6. **D06 open:** CTI/CVE feeds, refresh and staleness rules **and a dependable software inventory/asset version source** are undefined. D04 must enable reviewed CSV inventory/scanner-export mappings; initial connectors alone do not supply guaranteed inventory.
+7. **D07 accepted, 2026-10-12:** three sensitivity classes; unbounded free text in restricted raw only; server-enforced distinct raw-read permission; masked-by-default exports; EXSUM aggregates only. Findings use the D03 §9 state/occurrence `finding_id` models with per-observation bounded `raw_ref` anchors (max 64), not a `raw_ref` primary key, and never an evidence hash or rule version inside the identity. Implementation and environment classification overlay remain outstanding under P1/D05.
 8. GitHub required status checks must be configured on the destination repository; the archive cannot establish that setting.
 9. The static test checker does not follow reassignment such as `const c = test; c.only(...)`. Runtime skipped/todo detection does not close this focused-test gap.
 

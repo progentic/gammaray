@@ -1,7 +1,7 @@
 # D05 — Deployment profile worksheet (owner input required)
 
 **Status:** Owner worksheet annex; not infrastructure configuration. DP-03 selected by the owner ruling of 2026-10-12 (A2 target); the remaining items are unfilled. Per that ruling, only DP-01, DP-02, DP-03, DP-07, DP-09 and DP-12 gate derivation of the P1 interfaces; capacity, HA, backup-sequencing and CI-promotion items are deferred to P3 or P7.  
-**Version:** GammaRay `v0.0.0`, Phase 0  
+**Version:** GammaRay `v0.0.2`, Phase 0  
 **Decision:** [D05_DEPLOYMENT.md](D05_DEPLOYMENT.md)
 
 Keep `TBD` until the owner supplies evidence. Do not interpret this worksheet as permission to connect to real networks or ingest real logs.
@@ -20,7 +20,7 @@ Keep `TBD` until the owner supplies evidence. Do not interpret this worksheet as
 | DP-10 | Immutable retention mode, retention duration, legal hold and test evidence (D02) | TBD | TBD |
 | DP-11 | Storage/encryption key custody, rotation, certificate authority | TBD | TBD |
 | DP-12 | Temp working directory or container scratch: tmpfs/volume, quota, mount options, cleanup | TBD | TBD |
-| DP-13 | Database storage, indexes, backups and schema migration owner | TBD | TBD |
+| DP-13 | Database storage, indexes, backups and schema migration owner | PostgreSQL **engine** selected; host, backup plan and migration owner TBD | Owner v0.0.1 ruling, D01; remaining fields TBD |
 | DP-14 | Protected raw + index backup/restore sequencing and separate recovery credentials | TBD | TBD |
 | DP-15 | Outage buffering, data completeness signaling, RPO/RTO ownership | TBD | TBD |
 | DP-16 | Monitoring, clock synchronization, audit forwarding, integrity alarms | TBD | TBD |
@@ -53,3 +53,9 @@ Keep `TBD` until the owner supplies evidence. Do not interpret this worksheet as
 D05 can be accepted only with an identified topology and a sufficiently complete profile to derive Phase 1 interfaces and threat boundaries. Numeric workload and service targets may be refined under D10, but missing hosting, custody, classification, identity, or flow assumptions cannot be silently defaulted.
 
 **Owner amendment (2026-10-12):** D05 was accepted with A2 as the identified topology. For P1, the gating subset of this worksheet is DP-01, DP-02, DP-03, DP-07, DP-09 and DP-12 only. The remaining items must still be completed at their deferred gates (P3 or P7); deferral is not a waiver and does not permit silent defaults at those gates.
+
+## Current Phase 0 evidence versus owner deployment inputs (v0.0.1)
+
+The **existing repository is a starter using synthetic fixtures only**. No deployed GammaRay API, authentication provider, raw vault, worker scratch, live source integration, or P1 production environment was supplied or verified. This observable fact is **not** an owner's deployment selection. DP-01, DP-02, DP-07, DP-09 and DP-12 therefore remain **TBD for P1**; DP-03 (A2) remains approved.
+
+If the owner later authorizes a lab-only P1 profile, it may use a B1 local protected area **only with synthetic data**, a local test identity mechanism, and bounded ephemeral scratch. That would need explicit lab values and approval for all six gating entries; it would not satisfy B3 hostile-administrator or production claims. No real data may be ingested merely because a lab profile is documented.

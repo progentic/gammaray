@@ -42,7 +42,7 @@ Flow is one-directional. Connectors write only to the raw store. Normalizers rea
 | Derived | Metric results, enrichment records, findings, report snapshots | Rebuildable or versioned; never edits lower tiers |
 | Quarantine | Raw ref and failure reason for records that did not normalize | Cleared only by successful reprocessing |
 
-**Accepted D07 boundary:** Verbatim original messages, command lines, and unbounded log text are stored **only in restricted raw**. Normalized data contains approved typed structured fields, not copies of the raw message. Raw drill-down is an audited, separate API permission. D01/D03/D05 implementation mechanisms remain open.
+**Accepted D07 boundary:** Verbatim original messages, command lines, and unbounded log text are stored **only in restricted raw**. Normalized data contains approved typed structured fields, not copies of the raw message. Raw drill-down is an audited, separate API permission. D01 B3/PostgreSQL and D05 A2 are selected but not deployed; D03 draft field-model approval and all implementation evidence remain open.
 
 ## Owners
 
@@ -80,7 +80,7 @@ A report is a definition plus a snapshot. Generation resolves metrics and findin
 
 ## CTI and CVE analysis
 
-`src/intel/` extracts indicators (IPs, domains, hashes, hostnames, software identifiers) from normalized events and matches them against CTI feeds and CVE data. Output is stored as enrichment and finding records that reference normalized events and carry feed identity, feed fetch time, and match basis. Enrichment never modifies normalized events.
+`src/intel/` extracts **approved typed** indicators (IPs, domains, bounded URLs, legacy MD5/SHA-1 and SHA-256 hashes, hostnames and software identifiers) from normalized events and matches them against CTI feeds and CVE data. Source-reported `software_inventory` and `vulnerability` event families preserve their original assertions; derived CVE matches never masquerade as source scanner events. Output is a separate enrichment/finding record identified under the D03 §9 models (state findings: scope + rule + canonical subject; occurrence findings add a deterministic occurrence key), with per-observation bounded supporting `raw_ref` evidence anchors (cap: 64 per observation; possibly several raw records per observation or several findings per raw), advisory parser-version `event_id` projections, and feed identity/revision/fetch time and match basis carried as observation provenance. Enrichment never modifies normalized events. The five transport connectors do **not** guarantee complete inventory: D04/D06 must provide a dependable software inventory/asset-version feed (such as approved CSV or Splunk results), or CVE coverage is unknown.
 
 ## Boundaries and limitations
 
@@ -88,6 +88,6 @@ A report is a definition plus a snapshot. Generation resolves metrics and findin
 - The canonical schema covers fields needed for the metrics and intel features that exist. Fields outside it remain available in raw.
 - Report fidelity is bounded by ingestion completeness. Gaps and lag are reported with the output, not hidden.
 - Authentication and authorization are enforced in `src/api/`; storage components assume authorized callers.
-- Storage engines, deployment topology, and retention periods are open items in `docs/INVARIANTS.md`.
+- B3 raw custody, PostgreSQL relational storage and A2 deployment direction are selected under D01/D05; vault product/environment, D02 retention, D03 field-model acceptance and operational proof remain open in the decision register.
 
 Add architecture for new capabilities when they exist. Do not invent services, interfaces, or shared ownership ahead of need.

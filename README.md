@@ -4,11 +4,11 @@ SOC Dashboard. GammaRay ingests log data from SIEM tools, syslog, host event log
 
 Initial sources: Splunk, Cisco syslog, Windows event logs, macOS event logs, CSV. Additional log types are added by writing a connector and a normalizer; no downstream component changes.
 
-Delivery goals: `docs/ROADMAP.md`. Implementation and acceptance sequence: `docs/PHASE_PLAN.md`. Full design: `docs/ARCHITECTURE.md`. Binding constraints: `docs/INVARIANTS.md` — including its Accepted open items (storage engines, raw retention period, canonical schema field set, CSV mapping, deployment model, CTI/CVE feeds, PII handling), which are not yet decided.
+Delivery goals: `docs/ROADMAP.md`. Implementation and acceptance sequence: `docs/PHASE_PLAN.md`. Full design: `docs/ARCHITECTURE.md`. Binding constraints: `docs/INVARIANTS.md` — including its Accepted open items (storage engines, raw retention period, canonical schema field set, CSV mapping, deployment model, CTI/CVE feeds, PII handling), whose current decision statuses and remaining owner gates are recorded in `docs/PHASE0_DECISION_REGISTER.md`.
 
 ## Status
 
-Blank start, 2026-10-12, from the blank-repo starter (final revision, TypeScript / Node). Governing documents are `docs/ARCHITECTURE.md` and `docs/INVARIANTS.md` as supplied for GammaRay. No GammaRay application code exists yet: the starter placeholder (`src/greet.ts`, `src/cli.ts`, `tests/e2e/cli.test.ts`) is still in place and is deleted when the first real code lands. Nothing is committed; no remote is configured.
+`v0.0.2` Phase 0 D03 contract-correction patch (task P0-D03-002, 2026-10-13) on the v0.0.1 closeout, based on the TypeScript / Node starter. Governing documents are `docs/ARCHITECTURE.md` and `docs/INVARIANTS.md` as supplied for GammaRay. No GammaRay application code exists yet: the starter placeholder (`src/greet.ts`, `src/cli.ts`, `tests/e2e/cli.test.ts`) is still in place and is deleted when the first real code lands. No commit or remote is included in this delivered archive. Architectural direction: PostgreSQL for relational records, independently administered B3 raw vault as target, A2 topology; P1 deployment facts, retention and D03 field-model approval remain outstanding.
 
 ## Development
 

@@ -36,6 +36,8 @@ repository setting — see below), and self-hosted runners. If a future phase
 requires self-hosted or network-isolated CI, it needs its own approved
 runner threat model first.
 
+The `--self-test` additionally rejects malformed or non-array reports even with scanner exit 0 and tests the difference between an absent JSON report and an existing but unreadable report. These are reviewable negative controls in `scripts/check-secrets.mjs` (v0.0.1, retained unchanged in v0.0.2).
+
 ## Checks, in order
 
 1. **Checkout** (pinned SHA, no persisted credentials, full history).

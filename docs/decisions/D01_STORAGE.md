@@ -1,7 +1,7 @@
 # D01 — Immutable raw evidence storage and isolation
 
 **Status:** **Accepted with changes** — product owner, 2026-10-12 (B3 as primary class; see §8 decision record)  
-**Repository version:** `v0.0.0` (no storage implementation in scope for this review)  
+**Repository version:** `v0.0.2` (no storage implementation in scope for this review)  
 **Blocks:** P1 data storage contract  
 **Dependencies:** D02 retention/legal hold; D05 placement/trust domains; D07 accepted data restrictions; D03 normalized/event schema
 
@@ -24,7 +24,7 @@ The existing baseline prohibits raw updates and delegates authorized expiration/
 
 **Owner ruling (2026-10-12):** `raw_ref` stays **opaque**. It resolves to a pinned vault version plus an optional byte range — nothing more is promised by the reference itself. That resolution contract is what keeps both physical layouts in §3.1 possible: a pinned version alone for one-object-per-occurrence, a pinned segment version plus a byte range for sealed segments.
 
-**Necessary distinction:** A digest alone is not a source-event identity; `raw_ref` must not simply equal `blob_sha256`. Two identical log lines at different positions can be two legitimate occurrences. Deduplication is not blob sharing. Physical blob deduplication must not cause premature deletion while any referenced occurrence is retained or on hold.
+**Necessary distinction:** A digest alone is not a source-event identity; `raw_ref` must not simply equal `blob_sha256`. Two identical log lines at different positions can be two legitimate occurrences. Deduplication is not blob sharing. Finding identity is a separate derived-record concern (D03 §9): `finding_id` keys findings in the relational store, while `raw_ref` remains only the evidence anchor an observation cites — the vault never keys, dedupes, or authorizes by `finding_id`. Physical blob deduplication must not cause premature deletion while any referenced occurrence is retained or on hold.
 
 Idempotency proposal: use a stable source-native event position/id when available; otherwise a persisted connector-defined idempotency key that includes the source id and collection checkpoint/batch boundary and byte hash. Do not equate two matching byte strings with one event. For sources without a trustworthy stable position, explicitly document at-least-once behavior and duplicate policy. PostgreSQL nullable unique index semantics and retry races require dedicated tests; do not depend on a nullable `source_position` alone.
 
@@ -55,13 +55,13 @@ Each segment must be finalized *once* and retained as a pinned immutable version
 
 Capacity must not be guessed: for average events/day `E`, average original bytes per record `B`, and retention days `R`, base raw payload is approximately `E × B × R`. Add envelope/index, object metadata/API rate, WORM lock records, replicas/snapshots, backup copies, peak spool size and retention grace. D02 defines `R`; D09/P3 supply source traffic; D10 approves service targets and stress evidence. If `E` or `B` is unknown, **no capacity certification** follows from this record.
 
-## 4. Recommended storage composition (for approval)
+## 4. Selected storage composition (owner ruling; implementation unverified)
 
-**Recommended:** a relational store for occurrence metadata, normalized records, quarantine, audit, and derived results; a **separately controlled WORM-capable raw vault (B3)** as the primary evidence source, plus independent immutable/offline recovery copy as required by D05/D02. If cloud is permitted and its policy requirements are met, B4 can implement that raw vault; otherwise an on-prem appliance/object service whose retention controls are demonstrably independent of GammaRay administrators is required.
+**Selected:** **PostgreSQL** for occurrence metadata, normalized records, quarantine, audit, and derived results; a **separately controlled WORM-capable raw vault (B3)** as the primary evidence source, plus independent immutable/offline recovery copy as required by D05/D02. If cloud is permitted and its policy requirements are met, B4 can implement that raw vault; otherwise an on-prem appliance/object service whose retention controls are demonstrably independent of GammaRay administrators is required.
 
 This recommendation **strengthens** the previous relational + generic append-only raw tier. An ordinary directory under the same root-admin account would meet only B1's limited protection, not this design's preservation objective.
 
-No technology brand, cloud service, OS, or storage engine has been approved. Exact product selection depends on D05 location/compliance and D02 retention. PostgreSQL is a candidate relational store, not yet adopted.
+**Owner ruling (v0.0.1): PostgreSQL is the relational engine** for all non-raw roles. This does not choose a vault product, PostgreSQL hosting model, migration tool or operating environment. Separate database roles must enforce ingest receipts, canonical writes, derived writes, restricted audit access and read-only analytics. A successful PostgreSQL transaction cannot make an external vault write atomic: reconcile orphaned protected objects and incomplete index writes without modifying raw bytes. Use a nonnullable source idempotency key or explicitly scoped partial unique indexes, and prove nullable-key/race behavior under concurrent retry. SQLite is not an implementation fallback for role separation; a columnar analytics engine is a possible D10 performance decision only after measured demand. D05/D02 still control product placement, encryption, lock/hold policy, and recovery.
 
 ## 5. Evidence handling workflow: protected origin -> temporary copy
 
@@ -125,7 +125,7 @@ Create **synthetic** negative controls for: overwrite, rename, truncate, delete,
 - **Compliance-mode locks cannot be shortened.** Lock behavior is therefore tested **only in a throwaway vault with short synthetic retention**, never in a vault holding a long lock.
 - **D02 timing tightened:** because a locked vault cannot be corrected after the fact, **D02 must close before any real data lands in a locked vault** — not by P7. The register and phase plan are amended accordingly.
 
-Repository version remains `v0.0.0`. This acceptance settles the storage control class and the contracts in §2/§5; it does not select a product, and P7 still requires demonstrated vault and restore behavior (§7).
+Repository version becomes `v0.0.1` (Phase 0 documentation and scanner correction only). This acceptance settles B3 raw custody and PostgreSQL relational storage; it does not select a vault product or PostgreSQL host. P7 still requires demonstrated vault and restore behavior (§7).
 
 ## Technical sources for verification (not product endorsements)
 

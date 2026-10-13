@@ -1,7 +1,7 @@
 # D05 — Deployment model and complete deployment profile
 
 **Status:** **Accepted with changes** — product owner, 2026-10-12 (A2 as target; see §6 decision record)  
-**Repository version:** `v0.0.0` (Phase 0 architecture only)  
+**Repository version:** `v0.0.2` (Phase 0 architecture only)  
 **Blocks:** P1; production environment qualification is a later P7 gate  
 **Coupled decisions:** D01 raw custody, D02 retention, D07 accepted handling policy, D09 connectors, D10 operating targets
 
@@ -22,7 +22,7 @@ Choose **where the application runs**, **where original evidence resides**, **wh
 
 **Recommended direction: A2**, preserving the simplicity of original Option A *at the application layer* while preventing the application host from administering the raw vault. It is not equivalent to an all-on-one-host design. If an independent vault cannot be operated in the target environment, A1 with documented weaker assurances or B with dedicated storage must be an explicit owner decision, not a silent fallback.
 
-This is a **conditional recommendation**, not a selection.
+This was the **conditional recommendation**. The owner subsequently selected A2 in §6.
 
 ## 3. Required full deployment profile
 
@@ -98,4 +98,4 @@ Before accepting D05, record in the deployment profile: (1) authorized environme
 - Deciding question (owner): whether anyone must be unable to alter evidence even with admin on the GammaRay host. If yes, the separate vault is required; if the real threat were only bugs and accidents, A1-grade protection would be enough. A2-as-target is the recorded answer; B1's dev/lab carve-out does not change it.
 - **Worksheet gating reduced:** DP-01, DP-02, DP-03, DP-07, DP-09 and DP-12 are enough to derive the P1 interfaces. Capacity, HA, backup sequencing and CI promotion items are deferred to P3 or P7 — deferred, not waived, and they still gate those phases.
 
-Repository version stays `v0.0.0`. P1 interface work is unblocked by this decision to the extent of the six gating worksheet items above; the remaining profile items do not block P1.
+Repository version is `v0.0.2` (Phase 0 correction, not P1 acceptance). P1 interface work is **not yet unblocked**: DP-01, DP-02, DP-07, DP-09 and DP-12 still require owner values. Later worksheet items remain gated at their deferred phases.

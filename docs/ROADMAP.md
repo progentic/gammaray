@@ -1,6 +1,6 @@
 # GammaRay Roadmap
 
-**Baseline:** `v0.0.0` starter, 2026-10-12  
+**Baseline:** `v0.0.0` starter, 2026-10-12; current Phase 0 documentation/security patch `v0.0.2`  
 **Target:** `v1.0.0` production release  
 **Status:** Proposed delivery scope; no milestones are complete or approved release commitments.
 
@@ -14,7 +14,7 @@ GammaRay gives SOC analysts one place to ingest security events, preserve their 
 
 | Milestone | Proposed checkpoint | Major objective | Product outcome |
 | --- | --- | --- | --- |
-| P0: Establish the contract | `v0.0.0` | Resolve or explicitly gate architectural choices; establish release scope, security baseline, and measurable acceptance targets | An approved, implementable plan without hidden product decisions |
+| P0: Establish the contract | `v0.0.2` (current pre-foundation patch) | Resolve or explicitly gate architectural choices; establish release scope, security baseline, and measurable acceptance targets | An approved, implementable plan without hidden product decisions |
 | P1: Application foundation | `v0.1.0` | Establish storage boundaries, identity and access controls, audit, API, and an initial UI shell | A secure, operable foundation for actual SOC features |
 | P2: First complete data path | `v0.2.0` | Ingest CSV; preserve raw records; normalize, quarantine, query, and replay | An auditable source-to-event workflow, proven end to end |
 | P3: Initial source coverage | `v0.3.0` | Add Splunk, Cisco syslog, Windows events, and macOS events | All five initial source types ingest reliably with known completeness |
@@ -55,6 +55,6 @@ These are candidate directions, not approved requirements, dates, or release gua
 
 ## Decisions and roadmap governance
 
-The **seven architecture/product open items** in `docs/INVARIANTS.md` remain undecided: storage engines; retention and legal hold; canonical field set; CSV mapping and timestamp rules; deployment topology/isolation; CTI/CVE feeds and staleness; and sensitive-field handling. None is silently settled by this roadmap. The phase plan identifies when each decision blocks work.
+The Phase 0 decision register now records **accepted** A2 deployment direction, B3 raw custody, PostgreSQL relational engine, D07 handling policy, and Node 24 runtime. The D03 native approach is accepted, with its field model still under owner review. Retention and legal hold (D02), CSV source mappings (D04), confirmed inventory and CTI/CVE feed coverage (D06), and environment/production proof remain gated. See `docs/PHASE0_DECISION_REGISTER.md` and `docs/PHASE_PLAN.md`; the roadmap itself does not waive any gate.
 
 Review milestone scope at every exit gate. An addition that changes product promises, data contracts, security posture, runtime support, or deployment assumptions requires an explicit decision and synchronized updates to `ARCHITECTURE.md`, `INVARIANTS.md`, this roadmap, and the phase plan as applicable. The product owner approves scope and release decisions; a passing CI run does not supply that approval.
