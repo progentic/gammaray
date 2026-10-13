@@ -1,7 +1,7 @@
 # D07 — Sensitive data handling and raw access policy
 
 **Status:** **Accepted** — product owner directive, 2026-10-12  
-**Repository version:** `v0.0.0`, architecture approval only; no security implementation is implied  
+**Repository version:** `v0.0.2`, architecture approval only; no security implementation is implied  
 **Needed before:** P1; controls must be implemented and tested before real data ingestion  
 **Dependent decisions:** D01 raw vault mechanics; D02 retention/holds; D03 field table; D05 deployment/classification overlay
 
@@ -30,10 +30,10 @@ Raw bytes are **always restricted** as a whole. A log format being a familiar JS
 | **Parser/worker scratch** | Temporarily restricted while holding a read-only *copy* of raw evidence; isolated process identity and bounded temporary storage; never a new system of record; cleanup on crash/restart |
 | **Quarantine** | Only `raw_ref`, a typed failure reason/code and parser version; never embeds failing original text; access and drill-down tied to raw permission |
 | **Metrics** | Aggregate results `operational` unless grouped on a sensitive key or risk of identifying individual activity; results inherit highest relevant class, including sparse groups |
-| **Findings and CTI/CVE** | `sensitive`; keyed on the stable `raw_ref` — `event_id` is advisory only, because it embeds the parser version and changes on every parser bump (owner ruling, 2026-10-12; see D03 §5); retain structured indicator and feed provenance, never embed copied raw messages |
+| **Findings and CTI/CVE** | `sensitive` as records. Identity follows D03 §9 (corrected under task P0-D03-002): state findings key on scope + rule id + canonical subject; occurrence findings add a deterministic occurrence key; rule versions, parser versions, feed revisions, and evidence hashes are **observation provenance, never identity**. Each observation carries 1–64 distinct `raw_ref` evidence anchors (cap approved under P0-D03-002; overflow quarantines, never truncates). `event_id` is advisory parser-specific provenance, **not** the finding key. Preserve parser/feed revisions and scope permissions; never embed copied raw messages |
 | **Dashboard/API** | Server checks permissions before returning identifiable fields or resolving a raw reference; UI masks sensitive values without grant and never receives unauthorized restricted bytes |
 | **Analyst PDF** | Masked by default; excludes restricted raw content even if the generator has raw-read privileges; sensitive content only under explicit authorized export policy, class marking and audit |
-| **Leadership EXSUM** | Aggregates and versioned metric values only; no full identifiers, raw bytes, per-user detail or indicator values; narrative does not manufacture unbound metrics |
+| **Leadership EXSUM** | Aggregates and versioned metric values only; approved aggregate vulnerability counts and trends are permitted (operational values, §5.1); no full identifiers, raw bytes, per-user detail, indicator values, or protected host relationships; narrative does not manufacture unbound metrics |
 | **Audit events** | Actor, action, target opaque ref, time, decision, reason code, outcome and request correlation only; never raw content, credentials, full queries or arbitrary user-entered text; restricted audit read to authorized operators |
 | **Backups and replicas** | Inherit source data classification and retention/hold limits; encrypted and access-separated per D05; restores audited |
 | **Tests/CI** | Synthetic fixtures exclusively; no live credential, production log, sensitive file, or raw vault link on public CI runners |
@@ -58,10 +58,21 @@ Every API route and query that might return sensitive, restricted, derived, or e
 - Exports are marked with applicable handling class, generated time, data range, data completeness and generating role; audit creation and any privileged sensitive fields. EXSUM aggregates only.
 - Unmasking `sensitive` fields requires appropriate authorization and explicit user action where supported; log the event. Never reveal partial credentials.
 
+### 5.1 Reporting and disclosure rules (reconciled under task P0-D03-002)
+
+The handling class on a schema field is a **label, not an authorization**. The following rules bind at the API, query, and reporting boundary regardless of classification:
+
+1. **Server-side authorization first.** Access to or export of sensitive records requires a server-side authorization decision before content is returned (§1, §4). A field's `operational` class never substitutes for that check.
+2. **Asset relationships are masked by default.** Any statement linking a vulnerability, software item, or indicator to a protected host or asset is sensitive, even when every value in it (CVE id, CVSS score, public software name/version, CPE, purl) is operational on its own.
+3. **Operational aggregates are the reporting surface.** Where disclosure policy permits, reports expose aggregate vulnerability counts, trends, and software/CVE distributions computed from operational values — not asset-linked rows.
+4. **Sparse-group protection.** Aggregates must not be sliceable into groups small enough to reconstruct a protected asset relationship; groups below the disclosure threshold are suppressed or merged, and results inherit the highest relevant class (§3, Metrics row).
+5. **Restricted stays restricted.** Raw messages and unrestricted free text are never reporting content; they remain reachable only through the audited raw evidence path (§3, §4 raw-read broker), and a report snapshot may reference `raw_ref`/`event_id` values without storing raw bytes (§5).
+6. **EXSUM boundary.** A leadership EXSUM may contain the approved aggregate vulnerability counts and trends of rule 3. It must not expose protected host relationships, per-user detail, or raw records.
+
 ## 6. Retention, encryption, and residual risks
 
 - **D02 open:** retention period, deletion trigger, legal hold, object lock duration, backup survivability and audit/approval workflow remain pending. An accepted D07 policy does not authorize deletion of held or protected evidence.
-- **D05 open:** confirm whether the target network is air-gapped, regulated or classified, and record data locality, controls, admin separation, key management, cryptography requirements, report distribution policy and authorized endpoints. Additional requirements may tighten D07 before data is ingested.
+- **D05 topology accepted, deployment details outstanding:** confirm whether the target network is air-gapped, regulated or classified, and record data locality, controls, admin separation, key management, cryptography requirements, report distribution policy and authorized endpoints. Additional requirements may tighten D07 before data is ingested.
 - Protect worker scratch copies through isolation, bounded lifetime and controlled cleanup; a copy of restricted data is itself restricted, even though it is not immutable.
 - TLS where supported/required for network channels, encryption at rest for stores and backups, restricted key custody, rotation procedures and separate administrative credentials are minimum controls subject to D05 design.
 - No immutable mechanism can establish whether the collector received genuine source bytes in the first place; this requires source authentication, provenance and audit.
@@ -74,4 +85,6 @@ Prove API scope and raw-permission negative cases; cross-user/role queries; unau
 
 **Accepted by product owner on 2026-10-12:** three handling classes; distinct raw read permission; server-side access checks; raw-only verbatim `message` and other unrestricted free text; typed minimized normalized event fields; masked-by-default exports; EXSUM aggregates only; audit and isolation controls. Any future weakening requires a new explicit owner decision.
 
-**Still open:** D01, D02, D03 and D05 implementation details and the applicable environment classification/legal overlay. GammaRay remains `v0.0.0` and P1 does not begin merely because D07 was accepted.
+**Correction (v0.0.2, task P0-D03-002):** §3 findings language and §5.1 reconcile this policy with the corrected D03 §9 identity models and the approved 32/64 numeric caps; no accepted requirement above was weakened, and the three-class policy is unchanged.
+
+**Still open:** D02 retention and legal holds; D03 complete field-model acceptance; D05 deployment profile and legal/classification overlay; and actual D01 vault/product implementation and test evidence. D01 B3/PostgreSQL and D05 A2 are **architecturally selected**, not open topologies. GammaRay is `v0.0.2`, a Phase 0 documentation/security patch, and P1 does not begin merely because D07 was accepted.

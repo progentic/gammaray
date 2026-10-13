@@ -1,7 +1,7 @@
 # GammaRay Phase Plan: v0.0.0 to v1.0.0
 
 **Planning baseline:** 2026-10-12  
-**Current state:** `v0.0.0`, a verified TypeScript/Node starter with a greeting CLI; no GammaRay application capability is implemented.  
+**Current state:** `v0.0.2`, a Phase 0 D03 contract correction (task P0-D03-002) to the TypeScript/Node starter; the greeting CLI remains and no SOC application capability is implemented.  
 **Status:** Proposed execution plan, subject to the decision gates below.
 
 ## How to use this plan
@@ -14,7 +14,7 @@ The checkpoint versions below are suggestions, not automatic release instruction
 
 | Phase | Proposed checkpoint | Main dependency | Proof of completion |
 | --- | --- | --- | --- |
-| P0. Design and decisions | `v0.0.0` | Starter and governing docs | Decisions, scope, and measurable gates recorded |
+| P0. Design and decisions | `v0.0.2` (pre-foundation) | Starter and governing docs | Decisions, scope, and measurable gates recorded |
 | P1. Foundation and security boundaries | `v0.1.0` | P0 storage/schema/topology/privacy decisions | Authenticated API, storage and audit contracts exercised |
 | P2. CSV vertical slice | `v0.2.0` | P1, CSV mapping decision | Raw-to-normalized-to-query/replay works end to end |
 | P3. Complete source ingestion | `v0.3.0` | P2, retention/source collection decisions | Five initial sources supported; lag and gaps visible |
@@ -57,7 +57,7 @@ A phase can prepare the next phase's design, but that does not satisfy a later e
 **Objective:** Establish that one complete source path is correct before introducing multiple connector protocols.
 
 **Work**
-- Implement CSV column mapping and missing/ambiguous timestamp handling according to the approved policy. Validate file bounds, malformed rows, and unsafe field values.
+- Implement CSV column mapping and missing/ambiguous timestamp handling according to the approved policy. D04 must include **synthetic software inventory and scanner/vulnerability CSV mappings**, keeping original asset/product evidence and timestamps; inventory completeness cannot be assumed. Validate file bounds, malformed rows, unsafe values and the proposed 32-CVE-per-event limit (pending field-model approval) without silent truncation or fan-out.
 - Ingest records into append-only raw storage with system UTC ingest time, source identity, original bytes, content hash, batch/position provenance, and idempotent deduplication.
 - Parse deterministically into a versioned canonical schema, preserving `raw_ref`, parser version, source timestamp context, and timezone assumptions. Route failures to quarantine without losing raw records.
 - Query normalized records through a read-only interface; support permission-checked raw drill-down and reprocessing from raw without mutating originals.
@@ -70,7 +70,7 @@ A phase can prepare the next phase's design, but that does not satisfy a later e
 **Objective:** Bring the four remaining source families into the same proved ingest/normalize contract.
 
 **Work**
-- Add read-only Splunk collection; Cisco syslog ingestion; Windows event-log ingestion; and macOS event-log ingestion. Approve the precise transport and collection method for each, including permissions and platform support.
+- Add read-only Splunk collection; Cisco syslog ingestion; Windows event-log ingestion; and macOS event-log ingestion. Approve the precise transport and collection method for each, including permissions and platform support. **Do not claim host software inventory from Windows/macOS install events or from Splunk transport alone**; demonstrate an authorized source with actual inventory coverage before P5.
 - Provide per-source normalization fixtures, timestamp policies (including syslog missing-year/zone cases and year rollover), parser versions, record/field limits, and typed failures.
 - Implement safe source positions/checkpoints, retry/restart behavior, deduplication, bounded ingestion, retention execution with auditing, and visibility into source lag, failures, and missing intervals.
 - Exercise realistic source fixtures and, where authorized, representative live or test-system integrations. Keep credentials read-only and source-specific.
@@ -94,8 +94,8 @@ A phase can prepare the next phase's design, but that does not satisfy a later e
 **Objective:** Add explainable context without changing the underlying event evidence.
 
 **Work**
-- Select and approve indicator/CVE feed providers, licenses or access requirements, refresh intervals, and staleness thresholds before wiring live feeds.
-- Extract supported indicators and software identifiers from normalized events. Match against feed records; store enrichment/findings separately with normalized-event reference, feed identity, fetch time, and match basis.
+- Select and approve indicator/CVE feed providers, licenses or access requirements, refresh intervals, and staleness thresholds before wiring live feeds. **D06 must also identify a reliable authorized source of asset software inventory, product versions and scanner vulnerability assertions.** The initial five connectors do not guarantee those datasets: inventory is likely to arrive in an approved Splunk search result or CSV export, with explicit D04 mapping. Missing coverage must render **unknown/incomplete**, not "no vulnerabilities."
+- Extract approved bounded indicators and software identifiers from normalized events. Match against feed records; store enrichment/findings separately under the D03 §9 identity models (state findings: scope + rule + canonical subject; occurrence findings add a deterministic occurrence key), with per-observation supporting `raw_ref` evidence anchors (maximum 64, approved under task P0-D03-002), parser/version provenance, feed identity/revision/fetch time, and match basis. A raw record can support several findings and one finding can cite several records; `event_id` is advisory.
 - Display match confidence/limitations as appropriate, stale feeds, unavailable feeds, and reviewable findings in the UI. Add bounded feed refresh, validation, and failure handling.
 
 **Exit gate:** Positive, negative, ambiguous, and stale-feed fixtures produce traceable results. Feed failure never silently converts an unknown result into a clean bill of health. Rebuilding or enriching does not mutate raw or normalized event content.
@@ -139,13 +139,13 @@ A phase can prepare the next phase's design, but that does not satisfy a later e
 
 ## Decision register: approval before dependent work
 
-These are decisions to **make**, not choices already made. D01-D07 correspond to the seven architectural open items in `docs/INVARIANTS.md`.
+This table records **approved choices and remaining decisions**. D01–D07 originate from the seven original architecture questions in `docs/INVARIANTS.md`; do not reopen accepted rulings without owner approval.
 
 | ID | Decision required | Needed before | Status |
 | --- | --- | --- | --- |
-| D01 | Raw, normalized, and derived storage engines; transaction and backup strategy | P1 | **Accepted with changes** (owner, 2026-10-12: B3 primary; no physical dedup in v1; `raw_ref` opaque; segment decision at P3 with measured EPS) |
+| D01 | Raw, normalized, and derived storage engines; transaction and backup strategy | P1 | **Accepted with changes** (owner, 2026-10-12: B3 primary, PostgreSQL relational engine; no physical dedup in v1; `raw_ref` opaque; segment decision at P3 with measured EPS) |
 | D02 | Raw retention duration, triggers, legal hold, and authorized deletion procedure | P3 retention work; must close by P7 — and before any real data lands in a locked vault (D01 ruling, 2026-10-12) | Open |
-| D03 | Canonical schema fields, versioning, and any external schema alignment | P1/P2 | **Accepted with changes — approach only** (owner, 2026-10-12; field model conditional on the observable registry, D03 §8) |
+| D03 | Canonical schema fields, versioning, and any external schema alignment | P1/P2 | **Accepted with changes — approach only** (owner, 2026-10-12; software/vulnerability family addition directed; registry/family schemas drafted; full field-model approval still pending, D03 §8) |
 | D04 | CSV mapping contract and rules for missing or unreliable timestamps | P2 | Open |
 | D05 | Deployment topology, tenancy/isolation, and deployment trust boundaries | P1 | **Accepted with changes** (owner, 2026-10-12: A2 target; B1 dev/lab only; production claims require B3/B4 evidence at P7; P1 worksheet gating = DP-01/02/03/07/09/12) |
 | D06 | CTI/CVE feed sources, refresh policy, staleness threshold, and access rights | P5 | Open |
@@ -169,13 +169,13 @@ Every phase must provide:
 ### Known starter gaps to retire
 
 - The passing starter tests cover only `greet` and its CLI; they do not validate SOC functionality.
-- The verifier originally had **no secret-scanning step**, although `INVARIANTS.md` calls for one. Phase 0 added the step (pinned gitleaks, with a positive control) to the pipeline and the CI workflow; it is implemented and locally verified for normal scanner behavior. **The abnormal-report fail-open identified in review (findings exit with an absent/invalid report read as clean) was fixed on 2026-10-12:** report interpretation is fail-closed in `scripts/check-secrets.mjs` (`interpretScan`), with abnormal-report negative controls in the `--self-test` that CI runs, plus stubbed-scanner end-to-end checks; see `docs/evidence/PHASE0_RULINGS_2026-10-12.md`. Live CI enforcement still depends on the GitHub items below.
+- The verifier originally lacked secret scanning, then the first Phase 0 correction left clean-exit malformed/non-array report and existing-unreadable-report gaps. **v0.0.1 corrects all reviewed abnormal-report cases**: `interpretScan` rejects malformed/non-array reports regardless of scanner exit; `readScanReport` distinguishes a missing report from a failed read. The CI `--self-test` now contains synthetic negative controls. Focused Node 22 tests validate the code paths but **Node 24 `npm run verify` for this revision is not yet claimed**; see [closeout evidence](evidence/PHASE0_V001_CLOSEOUT.md).
 - CI targeted Node 20 (out of support) and Node 22. Phase 0 moved runtime policy, CI, and type definitions to Node 24 only (D08, decided by the owner 2026-10-12) and recorded a local Node 24 verification run.
 - The ZIP cannot configure GitHub branch protection or required status checks. Configure and verify them in the actual repository before trusting merge gates.
 - Successful fixtures or generated PDF examples alone are insufficient proof of live source reliability, secure deployment, or recovery.
 
-## Phase 0 architecture review status — 2026-10-12
+## Phase 0 architecture review status — v0.0.2 (2026-10-13)
 
-Phase 0 remains **in progress** and project version remains **`v0.0.0`**. Owner rulings were recorded on 2026-10-12: **D07 Accepted** (policy; §3 amended so findings key on `raw_ref`), **D05 Accepted with changes** (A2 target; B1 dev/lab only; P1 worksheet gating reduced to six DP items), **D01 Accepted with changes** (B3 primary; caveats in the record), **D03 Accepted with changes — approach only** (field model conditional on the observable registry in D03 §8; schema remains a draft).
+Phase 0 remains **open** at `v0.0.2` with no application foundation or authorized real data. D07 is accepted; finding identity is corrected under task P0-D03-002 (D03 §9): state and occurrence identity models, an explicit observation contract, and coverage-gated state transitions replace the retired v1 formula that mixed evidence hashes and rule versions into `finding_id`. The 32-CVE and 64-reference numeric caps are approved by that task. D05 A2 target and D01 B3 plus PostgreSQL are selected by the owner. D03's approach and the addition of `software_inventory`/`vulnerability` are approved as direction, and the 26-field observable registry (version 2, corrected handling classes) and family/synthesis schemas are supplied as *proposals*. The **complete D03 field model awaits owner review and approval**; outstanding gates (D02, D04/D06 feeds and mappings, D05 worksheet facts, Node 24 full verification of this patch where not yet run, `npm audit`, live CI, branch protection) remain open and are recorded in `docs/evidence/PHASE0_V002_VERIFICATION.md`.
 
-Node.js 24 (D08) remains the chosen runtime. Before the Phase 0 exit gate can be claimed: fix the `check-secrets.mjs` abnormal-report fail-open with a negative control, run `npm audit`, and run CI against a real repository. P1 work that depends on the D03 field model remains blocked until its condition is met; no live data ingestion is authorized.
+**Outstanding exit gates:** DP-01/02/07/09/12 owner-supplied deployment facts; full verification of this revision on Node 24; `npm audit` (sandbox endpoint previously 403); a real GitHub Actions run and required branch protection (no remote or commit authorized); and approval of the D03 field model. D02 retention/hold policy remains mandatory before real records are placed into any retention-locked vault. The Gitleaks abnormal-report fix is complete at code and focused-test level, not evidence that these other gates have passed.
