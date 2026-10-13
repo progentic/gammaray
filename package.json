@@ -1,7 +1,7 @@
 {
   "name": "gammaray",
   "description": "SOC Dashboard: SIEM and CSV log analytics, custom metric visualizations, PDF reports and leadership EXSUMs, and CTI/CVE analysis.",
-  "version": "0.0.0",
+  "version": "0.0.2",
   "private": true,
   "type": "module",
   "engines": {
