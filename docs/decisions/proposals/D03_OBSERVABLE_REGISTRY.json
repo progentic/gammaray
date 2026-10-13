@@ -1,0 +1,651 @@
+{
+  "registry_version": 2,
+  "status": "PROPOSED - revised under task P0-D03-002 (v0.0.2): handling classes corrected per the owner-approved classification table in that task; CVE cap 32 and supporting-evidence cap 64 approved by the same task. The complete field model still requires explicit product owner acceptance before P1; no implementation.",
+  "schema_id": "urn:gammaray:phase0:normalized-event:draft-2",
+  "cve_max_items_per_event": 32,
+  "finding_evidence_max_refs_per_observation": 64,
+  "classification_policy": [
+    "Classes follow D07: operational / sensitive / restricted. Only operational and sensitive values may be normalized; restricted content (raw messages, credentials, unrestricted free text) is never an observable.",
+    "Classification attaches to the VALUE in context, not to the topic: a public CVE identifier is operational, while a statement linking that CVE to a protected host is sensitive.",
+    "Escalation: internal package names, proprietary software identifiers, and any value that reveals protected infrastructure are classified sensitive (or restricted) even where the public counterpart is operational.",
+    "Ports remain sensitive: they occur only as part of flows between sensitive endpoints. Protocol tokens are operational.",
+    "File hashes remain sensitive in normalized events: in this corpus they arrive attached to host/process context. A hash received as a standalone public CTI indicator is handled at the intel layer, not by reclassifying this field."
+  ],
+  "observable_roots": [
+    "host",
+    "actor",
+    "network",
+    "web",
+    "process",
+    "file",
+    "software",
+    "vulnerability"
+  ],
+  "entries": [
+    {
+      "field": "host.name",
+      "type": "string",
+      "limits": {
+        "minLength": 1,
+        "maxLength": 253
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema string bounds (minLength/maxLength) in the root schema; registry limits must equal schema limits (checked).",
+      "normalization": "Trim surrounding whitespace; reject control characters via schema bounds; case preserved (hostnames are case-insensitive but the source spelling is evidence-adjacent; matching is case-insensitive at query time, not by rewriting the value)."
+    },
+    {
+      "field": "host.ip",
+      "type": "string",
+      "limits": {
+        "formats": [
+          "ipv4",
+          "ipv6"
+        ]
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Must parse as IPv4 or IPv6 (format assertion); stored as supplied after validation; no zone/scope suffixes."
+    },
+    {
+      "field": "actor.user_name",
+      "type": "string",
+      "limits": {
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Stored as supplied; no case folding (account namespaces differ); control characters rejected by schema bounds."
+    },
+    {
+      "field": "actor.user_id",
+      "type": "string",
+      "limits": {
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Stored as supplied; opaque identifier, never parsed for meaning."
+    },
+    {
+      "field": "network.source_ip",
+      "type": "string",
+      "limits": {
+        "formats": [
+          "ipv4",
+          "ipv6"
+        ]
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Must parse as IPv4 or IPv6 (format assertion)."
+    },
+    {
+      "field": "network.destination_ip",
+      "type": "string",
+      "limits": {
+        "formats": [
+          "ipv4",
+          "ipv6"
+        ]
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Must parse as IPv4 or IPv6 (format assertion)."
+    },
+    {
+      "field": "network.source_port",
+      "type": "integer",
+      "limits": {
+        "minimum": 0,
+        "maximum": 65535
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Integer 0-65535; no service-name substitution.",
+      "notes": "Sensitive: meaningful only as part of a flow between sensitive endpoints; retained at the flow's class rather than the protocol's."
+    },
+    {
+      "field": "network.destination_port",
+      "type": "integer",
+      "limits": {
+        "minimum": 0,
+        "maximum": 65535
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Integer 0-65535; no service-name substitution.",
+      "notes": "Sensitive: meaningful only as part of a flow between sensitive endpoints; retained at the flow's class rather than the protocol's."
+    },
+    {
+      "field": "network.protocol",
+      "type": "enum",
+      "limits": {
+        "allowed": [
+          "tcp",
+          "udp",
+          "icmp",
+          "icmpv6",
+          "sctp",
+          "other"
+        ]
+      },
+      "handling_class": "operational",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Lowercase enum token from the closed list; source synonyms map at the parser, never free text."
+    },
+    {
+      "field": "network.dns_name",
+      "type": "string",
+      "limits": {
+        "minLength": 1,
+        "maxLength": 253,
+        "pattern": "^(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)*[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.?$"
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Validated FQDN pattern; case preserved; a trailing dot is permitted by the pattern and is significant (absolute name)."
+    },
+    {
+      "field": "network.domain",
+      "type": "string",
+      "limits": {
+        "minLength": 1,
+        "maxLength": 253,
+        "pattern": "^(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)*[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.?$"
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Validated registrable-domain pattern; distinct from the full DNS question name in network.dns_name."
+    },
+    {
+      "field": "web.url",
+      "type": "string",
+      "limits": {
+        "minLength": 8,
+        "maxLength": 2048,
+        "format": "uri",
+        "pattern": "^https?://[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?(?::[0-9]{1,5})?(?:/[A-Za-z0-9._~/%+\\-]*)?$"
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Reviewed HTTP(S) indicator only: no userinfo, query, or fragment (pattern-enforced); parsers must also reject paths carrying sensitive material or risky encoding, else omit the field."
+    },
+    {
+      "field": "process.name",
+      "type": "string",
+      "limits": {
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Executable/image name only, never a command line; control characters rejected by schema bounds."
+    },
+    {
+      "field": "process.pid",
+      "type": "integer",
+      "limits": {
+        "minimum": 0
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Nonnegative integer as reported by the source; no cross-boot uniqueness is implied."
+    },
+    {
+      "field": "file.name",
+      "type": "string",
+      "limits": {
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Base file name as reported; never a full path with directory content copied from raw text beyond the bounded name field."
+    },
+    {
+      "field": "file.sha256",
+      "type": "string",
+      "limits": {
+        "pattern": "^[0-9a-f]{64}$"
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "Pattern assertion in the root schema; registry limits must equal schema limits (checked).",
+      "normalization": "Lowercase hex, exactly 64 chars (pattern-enforced); uppercase input is rejected, not folded."
+    },
+    {
+      "field": "file.md5",
+      "type": "string",
+      "limits": {
+        "pattern": "^[0-9a-f]{32}$"
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Lowercase hex, exactly 32 chars (pattern-enforced); legacy CTI matching only, never a vault integrity digest (D01)."
+    },
+    {
+      "field": "file.sha1",
+      "type": "string",
+      "limits": {
+        "pattern": "^[0-9a-f]{40}$"
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "authentication",
+        "network",
+        "process",
+        "file",
+        "identity",
+        "configuration",
+        "system",
+        "security_detection",
+        "unclassified",
+        "software_inventory",
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Lowercase hex, exactly 40 chars (pattern-enforced); legacy CTI matching only, never a vault integrity digest (D01)."
+    },
+    {
+      "field": "software.vendor",
+      "type": "string",
+      "limits": {
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+      },
+      "handling_class": "operational",
+      "families": [
+        "software_inventory"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Public vendor name as published; no control characters (pattern-enforced). If a value is an internal/proprietary identifier, the escalation rule in classification_policy applies."
+    },
+    {
+      "field": "software.name",
+      "type": "string",
+      "limits": {
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+      },
+      "handling_class": "operational",
+      "families": [
+        "software_inventory"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Public product name as published; no control characters (pattern-enforced). Internal/proprietary product identifiers escalate per classification_policy.",
+      "notes": "Operational as a public product value. The statement that a protected asset runs this software is an internal inventory association and is sensitive at the record/reporting layer (D07 section 5); classification of the value does not authorize asset-linked disclosure."
+    },
+    {
+      "field": "software.version",
+      "type": "string",
+      "limits": {
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+      },
+      "handling_class": "operational",
+      "families": [
+        "software_inventory"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Version string exactly as published/reported; never invented or completed; no control characters (pattern-enforced). Absent when the source does not state a usable version."
+    },
+    {
+      "field": "software.cpe",
+      "type": "string",
+      "limits": {
+        "minLength": 10,
+        "maxLength": 512,
+        "pattern": "^cpe:2\\.3:[aho\\*]:[^\\s?#]+$"
+      },
+      "handling_class": "operational",
+      "families": [
+        "software_inventory"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "CPE 2.3 URI form per pattern; public catalog identifier."
+    },
+    {
+      "field": "software.purl",
+      "type": "string",
+      "limits": {
+        "minLength": 5,
+        "maxLength": 512,
+        "pattern": "^pkg:[^\\s?#]+$"
+      },
+      "handling_class": "operational",
+      "families": [
+        "software_inventory"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Package URL per pattern; public catalog identifier."
+    },
+    {
+      "field": "vulnerability.cve_ids",
+      "type": "array<string>",
+      "limits": {
+        "items": {
+          "type": "string",
+          "maxLength": 24,
+          "pattern": "^CVE-(?:19|20)[0-9]{2}-[0-9]{4,10}$"
+        },
+        "minItems": 1,
+        "maxItems": 32,
+        "uniqueItems": true
+      },
+      "handling_class": "operational",
+      "families": [
+        "vulnerability"
+      ],
+      "required": true,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Uppercase CVE grammar per pattern (lowercase rejected, not folded); deduplicated (uniqueItems); order is source order and carries no meaning; 1-32 items, overflow quarantines the projection (D03 section 4).",
+      "notes": "Operational as public vulnerability identifiers. A statement linking a CVE to a protected host is sensitive (see vulnerability.source_finding_id and D07 section 5 sparse-group and masking rules)."
+    },
+    {
+      "field": "vulnerability.source_finding_id",
+      "type": "string",
+      "limits": {
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^[A-Za-z0-9_.:-]+$"
+      },
+      "handling_class": "sensitive",
+      "families": [
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Scanner-local identifier token per pattern; stored as supplied; meaningful only inside the issuing scanner's namespace.",
+      "notes": "Sensitive: the identifier is only meaningful linked to a protected estate's scan results; it embodies an asset association even though the CVE identifiers it references are operational."
+    },
+    {
+      "field": "vulnerability.cvss_score",
+      "type": "number",
+      "limits": {
+        "minimum": 0,
+        "maximum": 10
+      },
+      "handling_class": "operational",
+      "families": [
+        "vulnerability"
+      ],
+      "required": false,
+      "nullable": false,
+      "validation": "JSON Schema constraints in the root schema (type, bounds, pattern/format/enum as listed in limits); registry limits must equal schema limits (checked).",
+      "normalization": "Numeric 0-10 as scored by the source/feed; no rounding or rescaling at normalization."
+    }
+  ]
+}

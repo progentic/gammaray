@@ -1,0 +1,64 @@
+{
+  "note": "Synthetic identity vectors for the v2 finding identity model (D03 section 9, task P0-D03-002). Not an implemented finding or an approved field model. The v1 formula (rule id + rule version + subject + evidence-set hash) is retired: its vector is preserved below under retired_v1_vector for migration reference only.",
+  "identity_version": 2,
+  "scope_id": "scope:lab",
+  "state_finding": {
+    "rule_id": "cve.version-match",
+    "subject_id": "asset:lab-host-1:software:example-browser@3.2.1:cve:CVE-2026-12345",
+    "expected_finding_id": "f86e87c82e2e8bd2a3cb149cf20f21734158d6b9092caa35f06b5a487a44b2b7",
+    "stability_assertions": [
+      "finding_id is unchanged when the supporting evidence set changes (scan A vs scan B refs).",
+      "finding_id is unchanged across compatible rule revisions (rule_version is not an identity input).",
+      "finding_id changes when the asset, the software, or the CVE in the subject changes."
+    ],
+    "observations": [
+      {
+        "scan_key": "scan:lab-scan-2026-10-12-001",
+        "rule_version": "1.0.0",
+        "parser": {
+          "id": "lab.parser",
+          "version": "1.0.0"
+        },
+        "feed_revision": "lab-feed-2026-10-12",
+        "supporting_raw_refs": [
+          "raw:lab:vulnerability:001",
+          "raw:lab:software:001"
+        ],
+        "expected_evidence_set_hash": "7ec57236f3d056c9cb611ac226e4da6393d7cd1a7867236894c23ff27c838b7e",
+        "expected_observation_id": "d7109cb64b522fd17a82409482629e9f7cb4229582cdfd97067fd27d7d038832"
+      },
+      {
+        "scan_key": "scan:lab-scan-2026-10-13-001",
+        "rule_version": "1.1.0",
+        "parser": {
+          "id": "lab.parser",
+          "version": "1.0.1"
+        },
+        "feed_revision": "lab-feed-2026-10-13",
+        "supporting_raw_refs": [
+          "raw:lab:vulnerability:002"
+        ],
+        "expected_evidence_set_hash": "e730b5dac1f80ad7f441755cfe2bffa118994c0edcf2d4dcff66897d943b3692",
+        "expected_observation_id": "9eacbf28d0bc4d9b1aada2577bd157dec90b007c8bcea681ff68c229693390ef"
+      }
+    ]
+  },
+  "occurrence_finding": {
+    "rule_id": "auth.brute-force",
+    "subject_id": "asset:lab-host-1:actor:jsmith",
+    "occurrence_key": "win:4625:2026-10-12T03:14:00Z:attempts:12",
+    "expected_finding_id": "a7a9b57db85f03b9bba1d09fa9978d8bdd3a72e28a1e2611793cf8532c27e1f5"
+  },
+  "retired_v1_vector": {
+    "formula": "SHA-256 over tag GammaRay:finding-id:v1, length-prefixed rule_id, rule_version, subject_id, evidence_set_hash",
+    "rule_id": "cve.version-match",
+    "rule_version": "1.0.0",
+    "subject_id": "asset:lab-host-1:software:example-browser",
+    "supporting_raw_refs": [
+      "raw:lab:vulnerability:001",
+      "raw:lab:software:001"
+    ],
+    "expected_evidence_set_hash": "7ec57236f3d056c9cb611ac226e4da6393d7cd1a7867236894c23ff27c838b7e",
+    "expected_finding_id": "db8fd5fc08a83f3ea25d6bc7b2fd542958d5d58e04448d8a52e75650d7c8958f"
+  }
+}

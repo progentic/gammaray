@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:gammaray:phase0:normalized-event:draft-1",
+  "$id": "urn:gammaray:phase0:normalized-event:draft-2",
   "title": "GammaRay normalized event - D03 review proposal only",
-  "description": "NOT ACCEPTED, NOT IMPLEMENTED. Not a release. Version remains v0.0.0.",
+  "description": "DRAFT ONLY, owner acceptance of approach but not field model. GammaRay v0.0.2 Phase 0. Requires local registration of two family schemas.",
   "type": "object",
   "properties": {
     "schema_version": {
@@ -16,7 +16,8 @@
     "raw_ref": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 128
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9_.:-]+$"
     },
     "parser": {
       "type": "object",
@@ -253,6 +254,12 @@
           "minLength": 1,
           "maxLength": 253,
           "pattern": "^(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)*[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.?$"
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253,
+          "pattern": "^(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)*[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.?$"
         }
       },
       "required": [],
@@ -285,6 +292,14 @@
         "sha256": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
+        },
+        "md5": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$"
+        },
+        "sha1": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
         }
       },
       "required": [],
@@ -379,6 +394,89 @@
         }
       },
       "required": [],
+      "additionalProperties": false
+    },
+    "web": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 2048,
+          "format": "uri",
+          "pattern": "^https?://[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?(?::[0-9]{1,5})?(?:/[A-Za-z0-9._~/%+\\-]*)?$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "software": {
+      "type": "object",
+      "properties": {
+        "vendor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+        },
+        "cpe": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 512,
+          "pattern": "^cpe:2\\.3:[aho\\*]:[^\\s?#]+$"
+        },
+        "purl": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 512,
+          "pattern": "^pkg:[^\\s?#]+$"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "vulnerability": {
+      "type": "object",
+      "properties": {
+        "cve_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 24,
+            "pattern": "^CVE-(?:19|20)[0-9]{2}-[0-9]{4,10}$"
+          },
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "source_finding_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_.:-]+$"
+        },
+        "cvss_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10
+        }
+      },
+      "required": [
+        "cve_ids"
+      ],
       "additionalProperties": false
     }
   },
@@ -1016,6 +1114,12 @@
       "required": [
         "event"
       ]
+    },
+    {
+      "$ref": "urn:gammaray:phase0:software_inventory:draft-1"
+    },
+    {
+      "$ref": "urn:gammaray:phase0:vulnerability:draft-1"
     }
   ]
 }

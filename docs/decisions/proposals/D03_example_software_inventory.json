@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "event_id": "292a46bd9e31c356b41a49f148982a9a4784612bdbc8462f292f12c39c576a51",
+  "raw_ref": "raw:lab:software:001",
+  "parser": {
+    "id": "cisco-asa-v1",
+    "version": "0.1.0"
+  },
+  "source": {
+    "connector_id": "splunk-soc-1",
+    "connector_kind": "splunk",
+    "producer_vendor": "Cisco",
+    "producer_product": "ASA",
+    "producer_event_code": "302013"
+  },
+  "time": {
+    "ingest_utc": "2026-10-01T19:03:13Z",
+    "event_utc": "2026-10-01T19:03:11Z",
+    "zone_status": "assumed",
+    "offset_minutes": -300,
+    "assumption_id": "cisco-fall-2026-zone"
+  },
+  "event": {
+    "family": "software_inventory",
+    "type": "software_inventory.observed",
+    "outcome": "unknown",
+    "action": "allow"
+  },
+  "software": {
+    "vendor": "ExampleSoft",
+    "name": "Example Browser",
+    "version": "5.2.1",
+    "purl": "pkg:generic/example-browser@5.2.1"
+  },
+  "host": {
+    "name": "lab-host-1"
+  }
+}

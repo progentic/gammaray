@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gammaray:phase0:software_inventory:draft-1",
+  "title": "GammaRay software_inventory discriminator (DRAFT)",
+  "description": "Family-specific normalized event constraint. Validate together with the base D03 schema, with explicit local resource registration.",
+  "type": "object",
+  "properties": {
+    "event": {
+      "type": "object",
+      "properties": {
+        "family": {
+          "const": "software_inventory"
+        },
+        "type": {
+          "enum": [
+            "software_inventory.observed",
+            "software_inventory.installed",
+            "software_inventory.removed"
+          ]
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9_.:-]+$"
+        },
+        "outcome": {
+          "enum": [
+            "success",
+            "failure",
+            "unknown"
+          ]
+        },
+        "severity_band": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical",
+            "unknown"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "family",
+        "type",
+        "outcome"
+      ],
+      "additionalProperties": false
+    },
+    "details": {
+      "type": "object",
+      "properties": {
+        "install_state": {
+          "enum": [
+            "installed",
+            "removed",
+            "unknown"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "event",
+    "software"
+  ]
+}

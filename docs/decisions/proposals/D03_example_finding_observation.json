@@ -1,0 +1,28 @@
+{
+  "observation_id": "9eacbf28d0bc4d9b1aada2577bd157dec90b007c8bcea681ff68c229693390ef",
+  "finding_id": "f86e87c82e2e8bd2a3cb149cf20f21734158d6b9092caa35f06b5a487a44b2b7",
+  "observed_at": "2026-10-13T06:00:00Z",
+  "rule_id": "cve.version-match",
+  "rule_version": "1.1.0",
+  "parser": {
+    "id": "lab.parser",
+    "version": "1.0.1"
+  },
+  "feed": {
+    "id": "lab-feed",
+    "revision": "lab-feed-2026-10-13",
+    "fetched_at": "2026-10-13T05:30:00Z"
+  },
+  "scan": {
+    "scan_key": "scan:lab-scan-2026-10-13-001",
+    "scan_id": "lab-scan-2026-10-13-001",
+    "source_id": "lab-scanner",
+    "coverage": "complete"
+  },
+  "result": "present",
+  "confidence": 0.9,
+  "evidence_set_hash": "e730b5dac1f80ad7f441755cfe2bffa118994c0edcf2d4dcff66897d943b3692",
+  "supporting_raw_refs": [
+    "raw:lab:vulnerability:002"
+  ]
+}
